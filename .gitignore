@@ -1,0 +1,4 @@
+watch-history.html
+.venv/
+output/
+!.gitignore
