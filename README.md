@@ -20,3 +20,12 @@ Run the command
 
 Pruned html file with only links to watched videos will be written to `output/pruned.html`
 
+# Options
+
+`--clean` removes the `output` folder at the beginning
+
+`--csv` generates only a csv with watch history info
+* `VIDEO_URL` - url to the youtube video
+* `VIDEO_NAME` - Title of the youtube video
+* `WATCH_DATE` - The time the video was watched
+
