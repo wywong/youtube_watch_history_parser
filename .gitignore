@@ -1,4 +1,5 @@
 watch-history.html
 .venv/
 output/
+thumbnail_cache/
 !.gitignore
