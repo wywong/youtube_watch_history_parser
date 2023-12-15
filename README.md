@@ -1,8 +1,8 @@
-## Parse YouTube watch history
+# Parse YouTube watch history
 
 Extracts links to watched youtube videos from watch-history.html from google takeout.
 
-# Setup
+## Setup
 
 `python3 -m venv .venv`
 
@@ -20,7 +20,7 @@ Run the command
 
 Pruned html file with only links to watched videos will be written to `output/pruned.html`
 
-# Options
+### Options
 
 `--clean` removes the `output` folder at the beginning
 
