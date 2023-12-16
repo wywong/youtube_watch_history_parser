@@ -22,7 +22,7 @@ Pruned html file with only links to watched videos will be written to `output/pr
 
 Generate an image tiled with watched video thumbnails. Written to `output/tiled.png`
 
-`python parse.py --mode tile --max-num-images 540 --start-date "2020-07-01" --end-date "2020-07-31" --clean --images-per-row 24 --tile-width 64 --tile-height 32 --unique`
+`python parse.py --mode tile --max-num-images 540 --start-date "2020-07-01" --end-date "2020-07-31" --clean --images-per-row 24 --tile-width 64 --tile-height 36 --unique`
 
 ### Options
 

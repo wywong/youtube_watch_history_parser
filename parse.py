@@ -87,7 +87,11 @@ class WatchHistoryHTMLParser:
                         print(watched)
                 print("Total csv rows: %s" % row_count)
 
-    def to_tiled_image(self, max_images, imgs_per_row):
+    def to_tiled_image(self,
+                       max_images,
+                       imgs_per_row,
+                       img_tile_width,
+                       img_tile_height):
         if not os.path.exists(WATCH_CSV_PATH):
             self.to_csv()
         image_count = 0
@@ -112,8 +116,6 @@ class WatchHistoryHTMLParser:
             return None
         print("Total images: %s" % image_count)
         imgs_per_col = int(math.ceil(float(image_count) / imgs_per_row))
-        img_tile_width = 128
-        img_tile_height = 72
         img_width = imgs_per_row * img_tile_width
         img_height = imgs_per_col * img_tile_height
         output_image = Image.new(mode="RGB", size=(img_width, img_height))
@@ -232,7 +234,12 @@ mode = args.mode
 if mode == MODE_CSV:
     watch_parser.to_csv()
 elif mode == MODE_TILE:
-    watch_parser.to_tiled_image(args.max_num_images, args.images_per_row)
+    watch_parser.to_tiled_image(
+        args.max_num_images,
+        args.images_per_row,
+        args.tile_width,
+        args.tile_height
+    )
 elif mode == MODE_PRUNE:
     watch_parser.to_pruned_html()
 else:
