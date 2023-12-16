@@ -35,3 +35,7 @@ Pruned html file with only links to watched videos will be written to `output/pr
               tiles them into one image
 
 `--max-num-images` maximum number of thumbnails for the tiled image
+
+`--start-date` only include videos watched on or after this date
+
+`--end-date` only include videos watched on or before this date
