@@ -45,3 +45,5 @@ Pruned html file with only links to watched videos will be written to `output/pr
 `--tile-width` width in pixels for thumbnail tiles
 
 `--tile-height` height in pixels for thumbnail tiles
+
+`--unique` If a video has been watched multiple times, only include the latest watch

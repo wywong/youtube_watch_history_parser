@@ -36,7 +36,6 @@ def download_thumbnail(url):
     if not glob.glob("%s/%s.*" % (THUMBNAIL_DIR, video_id)):
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-            time.sleep(1)
     return video_id
 
 
@@ -48,10 +47,12 @@ class WatchHistoryHTMLParser:
     def __init__(self,
                  watch_history_html,
                  start_date,
-                 end_date):
+                 end_date,
+                 unique):
         self.watch_history_html = watch_history_html
         self.start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
         self.end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+        self.unique = unique
 
     def to_csv(self):
         with open(self.watch_history_html) as watch_history:
@@ -62,6 +63,7 @@ class WatchHistoryHTMLParser:
             contents = soup.select('div.content-cell')
             watched_divs = filter(lambda x: valid_content(x.text), contents)
             date_format = WATCH_HISTORY_DATE_FORMAT
+            checked = set()
             with open(WATCH_CSV_PATH, "w", newline='') as csvfile:
                 csvwriter = csv.writer(csvfile)
                 csvwriter.writerow([VIDEO_URL_KEY, VIDEO_NAME_KEY, WATCH_DATE_KEY])
@@ -71,7 +73,9 @@ class WatchHistoryHTMLParser:
                         atag = watched.find('a')
                         url = atag["href"]
                         video_name = atag.text
-                        if video_name != url:
+                        unique_check = not (self.unique and url in checked)
+                        if video_name != url and unique_check:
+                            checked.add(url)
                             last_br = watched.find_all("br")[-1]
                             watch_date = ''.join(last_br.next_siblings)
                             d = datetime.strptime(watch_date, date_format).date()
@@ -175,6 +179,12 @@ args_parser.add_argument("--end-date",
                               """,
                          type=str,
                          default="9999-12-31")
+args_parser.add_argument("--unique",
+                        help="""
+                             If a video has been watched multiple times, only
+                             include the latest watch.
+                             """,
+                        action="store_true")
 args_parser.add_argument("--max-num-images",
                          help="Maximum number of thumbnails for the tiled image",
                          type=int,
@@ -212,7 +222,12 @@ if args.clean and os.path.isdir(OUTPUT_DIR):
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(THUMBNAIL_DIR, exist_ok=True)
 
-watch_parser = WatchHistoryHTMLParser(args.src, args.start_date, args.end_date)
+watch_parser = WatchHistoryHTMLParser(
+        args.src,
+        args.start_date,
+        args.end_date,
+        args.unique
+)
 mode = args.mode
 if mode == MODE_CSV:
     watch_parser.to_csv()
