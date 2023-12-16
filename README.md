@@ -39,3 +39,9 @@ Pruned html file with only links to watched videos will be written to `output/pr
 `--start-date` only include videos watched on or after this date
 
 `--end-date` only include videos watched on or before this date
+
+`--images-per-row` number of thumbnails per row in the output image
+
+`--tile-width` width in pixels for thumbnail tiles
+
+`--tile-height` height in pixels for thumbnail tiles

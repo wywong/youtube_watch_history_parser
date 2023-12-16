@@ -83,7 +83,7 @@ class WatchHistoryHTMLParser:
                         print(watched)
                 print("Total csv rows: %s" % row_count)
 
-    def to_tiled_image(self, max_images):
+    def to_tiled_image(self, max_images, imgs_per_row):
         if not os.path.exists(WATCH_CSV_PATH):
             self.to_csv()
         image_count = 0
@@ -106,7 +106,7 @@ class WatchHistoryHTMLParser:
         if len(video_ids) == 0:
             print("No watched videos found")
             return None
-        imgs_per_row = 7
+        print("Total images: %s" % image_count)
         imgs_per_col = int(math.ceil(float(image_count) / imgs_per_row))
         img_tile_width = 128
         img_tile_height = 72
@@ -179,6 +179,27 @@ args_parser.add_argument("--max-num-images",
                          help="Maximum number of thumbnails for the tiled image",
                          type=int,
                          default=210)
+args_parser.add_argument("--images-per-row",
+                         help="""
+                              Number of thumbnails that will be pasted to each
+                              row of the output image
+                              """,
+                         type=int,
+                         default=7)
+args_parser.add_argument("--tile-width",
+                         help="""
+                              Output width in pixels of the watched video
+                              thumbnail tile
+                              """,
+                         type=int,
+                         default=128)
+args_parser.add_argument("--tile-height",
+                         help="""
+                              Output height in pixels of the watched video
+                              thumbnail tile
+                              """,
+                         type=int,
+                         default=72)
 args_parser.add_argument("--clean",
                          help="Removes the output folder prior to parsing.",
                          action="store_true")
@@ -196,7 +217,7 @@ mode = args.mode
 if mode == MODE_CSV:
     watch_parser.to_csv()
 elif mode == MODE_TILE:
-    watch_parser.to_tiled_image(args.max_num_images)
+    watch_parser.to_tiled_image(args.max_num_images, args.images_per_row)
 elif mode == MODE_PRUNE:
     watch_parser.to_pruned_html()
 else:
