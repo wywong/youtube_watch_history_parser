@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup
+from PIL import Image
 from youtube_dl import YoutubeDL
 import argparse
 import csv
 import glob
+import math
 import os
 import shutil
 import time
@@ -11,10 +13,15 @@ DEFAULT_WATCH_HISTORY_HTML = "watch-history.html"
 OUTPUT_DIR = "output"
 WATCH_CSV_PATH = str(os.path.join(OUTPUT_DIR, "watch.csv"))
 THUMBNAIL_DIR = "thumbnail_cache"
+TILE_IMAGE_PATH = os.path.join(OUTPUT_DIR, "tiled.png")
 
 VIDEO_URL_KEY = "VIDEO_URL"
 VIDEO_NAME_KEY = "VIDEO_NAME"
 WATCH_DATE_KEY = "WATCH_DATE"
+
+MODE_PRUNE = "prune"
+MODE_CSV = "csv"
+MODE_TILE = "tile"
 
 def download_thumbnail(url):
     video_id = url.split('=')[-1]
@@ -27,6 +34,8 @@ def download_thumbnail(url):
     if not glob.glob("%s/%s.*" % (THUMBNAIL_DIR, video_id)):
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
+            time.sleep(1)
+    return video_id
 
 
 def valid_content(content_text):
@@ -62,6 +71,46 @@ class WatchHistoryHTMLParser:
                         print("FAILED TO PARSE %s", err)
                         print(watched)
 
+    def to_tiled_image(self, max_images):
+        if not os.path.exists(WATCH_CSV_PATH):
+            self.to_csv()
+        image_count = 0
+        video_ids = []
+        with open(WATCH_CSV_PATH, "r") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                video_url = row[VIDEO_URL_KEY]
+                try:
+                    video_id = download_thumbnail(video_url)
+                    video_ids.append(video_id)
+                    image_count += 1
+                except Exception as err:
+                    print("Failed to get thumbnail: %s" % video_url)
+                    print(err)
+                if image_count >= max_images:
+                    break
+        imgs_per_row = 7
+        imgs_per_col = int(math.ceil(float(image_count) / imgs_per_row))
+        img_tile_width = 128
+        img_tile_height = 72
+        img_width = imgs_per_row * img_tile_width
+        img_height = imgs_per_col * img_tile_height
+        output_image = Image.new(mode="RGB", size=(img_width, img_height))
+        r = 0
+        c = 0
+        for video_id in video_ids:
+            video_path = glob.glob("%s/%s.*" % (THUMBNAIL_DIR, video_id))
+            if len(video_path) > 0:
+                img = Image.open(video_path[0]).copy()
+                img.thumbnail((img_tile_width, img_tile_height))
+                coord = (c * img_tile_width, r * img_tile_height)
+                output_image.paste(img, coord)
+                c += 1
+                if c % imgs_per_row == 0:
+                    c = 0
+                    r += 1
+        output_image.save(TILE_IMAGE_PATH)
+
     def to_pruned_html(self):
         if not os.path.exists(WATCH_CSV_PATH):
             self.to_csv()
@@ -73,12 +122,6 @@ class WatchHistoryHTMLParser:
                 for row in reader:
                     text = row[VIDEO_NAME_KEY]
                     video_url = row[VIDEO_URL_KEY]
-                    try:
-                        download_thumbnail(video_url)
-                        time.sleep(1)
-                    except Exception as err:
-                        print("Failed to get thumbnail: %s" % video_url)
-                        print(err)
                     pruned_html.write("<a href=\"%s\">" % video_url)
                     pruned_html.write("%s</a>" % text)
                     pruned_html.write("\n")
@@ -90,12 +133,21 @@ args_parser.add_argument("--src",
                          help="Unmodified watch-history.html file",
                          type=str,
                          default=DEFAULT_WATCH_HISTORY_HTML)
-args_parser.add_argument("--csv",
+args_parser.add_argument("--mode",
                          help="""
-                              Extracts relevant information from watch-history.html
-                              and stores it in %s
+                              prune - Creates a pruned down html file for watch
+                                      history.
+                              csv - Extracts relevant information
+                                    from watch-history.html and stores it in %s
+                              tile - Generates an image using thumbnails of
+                                     watched videos
                               """ % WATCH_CSV_PATH,
-                         action="store_true")
+                         type=str,
+                         default=MODE_PRUNE)
+args_parser.add_argument("--max-num-images",
+                         help="Maximum number of thumbnails for the tiled image",
+                         type=int,
+                         default=210)
 args_parser.add_argument("--clean",
                          help="Removes the output folder prior to parsing.",
                          action="store_true")
@@ -109,8 +161,13 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(THUMBNAIL_DIR, exist_ok=True)
 
 watch_parser = WatchHistoryHTMLParser(args.src)
-if args.csv:
+mode = args.mode
+if mode == MODE_CSV:
     watch_parser.to_csv()
-else:
+elif mode == MODE_TILE:
+    watch_parser.to_tiled_image(args.max_num_images)
+elif mode == MODE_PRUNE:
     watch_parser.to_pruned_html()
+else:
+    print("Unsupported mode: %s" % args.mode)
 

@@ -24,8 +24,14 @@ Pruned html file with only links to watched videos will be written to `output/pr
 
 `--clean` removes the `output` folder at the beginning
 
-`--csv` generates only a csv with watch history info
+`--mode csv` generates only a csv with watch history info
 * `VIDEO_URL` - url to the youtube video
 * `VIDEO_NAME` - Title of the youtube video
 * `WATCH_DATE` - The time the video was watched
 
+`--mode prune` generates a pruned html with only links to the watched videos
+
+`--mode tile` downloads the thumbnails associated with the watched videos and
+              tiles them into one image
+
+`--max-num-images` maximum number of thumbnails for the tiled image
